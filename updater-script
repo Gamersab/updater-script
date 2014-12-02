@@ -1,5 +1,4 @@
 assert(getprop("ro.product.device") == "pico" || getprop("ro.build.product") == "pico" || abort("This package is for device: pico; this device is " + getprop("ro.product.device") + "."););
-ifelse(is_mounted("/system"), unmount("/system"));
 mount("yaffs2", "MTD", "system", "/system", "");
 package_extract_file("system/bin/backuptool.sh", "/tmp/backuptool.sh");
 package_extract_file("system/bin/backuptool.functions", "/tmp/backuptool.functions");
@@ -11,18 +10,19 @@ if is_mounted("/data") then
 package_extract_file("system/bin/otasigcheck.sh", "/tmp/otasigcheck.sh");
 package_extract_file("META-INF/org/cyanogenmod/releasekey", "/tmp/releasekey");
 set_metadata("/tmp/otasigcheck.sh", "uid", 0, "gid", 0, "mode", 0755);
-run_program("/tmp/otasigcheck.sh") != "31744" || abort("Can't install this package on top of incompatible data. Please try another package or run a factory reset");
+run_program("/tmp/otasigcheck.sh") == "0" || abort("Can't install this package on top of incompatible data. Please try another package or run a factory reset");
 else
 mount("yaffs2", "MTD", "userdata", "/data", "");
 package_extract_file("system/bin/otasigcheck.sh", "/tmp/otasigcheck.sh");
 package_extract_file("META-INF/org/cyanogenmod/releasekey", "/tmp/releasekey");
 set_metadata("/tmp/otasigcheck.sh", "uid", 0, "gid", 0, "mode", 0755);
-run_program("/tmp/otasigcheck.sh") != "31744" || abort("Can't install this package on top of incompatible data. Please try another package or run a factory reset");
+run_program("/tmp/otasigcheck.sh") == "0" || abort("Can't install this package on top of incompatible data. Please try another package or run a factory reset");
 unmount("/data");
 endif;
 show_progress(0.750000, 0);
 format("yaffs2", "MTD", "system", "0", "/system");
-mount("yaffs2", "MTD", "system", "/system", "");
+run_program("/sbin/busybox", "mount", "-t", "auto", "/dev/block/mmcblk0p2", "/system");
+run_program("/sbin/busybox", "rm", "-rf", "/system/*");
 package_extract_dir("system", "/system");
 symlink("../xbin/su", "/system/bin/su");
 symlink("/system/lib/libWnnEngDic.so", "/system/app/OpenWnn/lib/arm/libWnnEngDic.so");
